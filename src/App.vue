@@ -19,7 +19,13 @@ function sendMsgToBg() {
 </script>
 
 <template>
-  <button @click="sendMsgToBg"> Hello </button>, I am: <input v-model="name"/>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <button type="button" class="btn">collected words</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

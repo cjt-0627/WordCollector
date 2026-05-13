@@ -25,6 +25,7 @@ export default defineConfig({
         background: 'src/background/background.js', // Add `background.js` as another entry point
       },
       output: {
+        assetFileNames:'[name][extname]',
         entryFileNames: (chunkInfo) => {
           // Dynamically name files based on their entry point
           if (chunkInfo.name === 'content') {
