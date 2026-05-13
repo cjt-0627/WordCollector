@@ -19,10 +19,10 @@ function sendMsgToBg() {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container py-3" >
     <div class="row">
-      <div class="col">
-        <button type="button" class="btn">collected words</button>
+      <div class="col-12" >
+        <button type="button" class="btn btn-success w-100">collected words</button>
       </div>
     </div>
   </div>
