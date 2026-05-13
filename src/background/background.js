@@ -21,5 +21,9 @@ chrome.contextMenus.onClicked.addListener((info,tab)=>{
         console.log("collected word: ",selectedWord);
 
         //logic
+        chrome.tabs.sendMessage(tab.id,{
+            action:"show-translation-modal",
+            word: selectedWord
+        })
     }
 })
