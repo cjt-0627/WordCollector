@@ -27,9 +27,9 @@ onMounted(()=>{
 
 watch([translationMethod,apiKey,apiUrl,selectedModel],()=>{
   chrome.storage.local.set({
-    translationMethod:translationMethod,
+    translationMethod:translationMethod.value,
     apiKey:apiKey.value,
-    apiUrl:apiUrl,
+    apiUrl:apiUrl.value,
     selectedModel:selectedModel.value
   })
 })
@@ -63,6 +63,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       translationText.value = `(AI searching ${request.word}...)`;
     }else{
       translationText.value=`(Google translating ${request.word}...)`
+      translateWithGoogle(request.word)
     }
   }
   sendResponse({ status: "modal_opened" });
@@ -73,6 +74,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function closeModal() {
   isModalVisible.value = false;
 }
+
+async function translateWithGoogle(word){
+  try{
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(word)}`
+    const response= await fetch(url)
+    const data=await response.json();
+    if(data && data[0] && data[0][0] && data[0][0][0]){
+      translationText.value=data[0][0][0]
+    }else{
+      translationText.value="fail to translate"
+    }
+  }catch(error){
+    console.error("Google Translate Error:", error)
+    translationText.value="An error occurred"
+  }
+}
+
 </script>
 
 <template>
@@ -123,8 +141,8 @@ function closeModal() {
       </div>
 
       <div class="mb-2">
-        <label for="modelSelect" class="form-label text-muted mb-1" style="font-size:0.85rem">Model Selection</label>
-        <input type="text" class="form-control form-controll-sm" id="modelSelect" v-model="modelSelect"
+        <label for="selectedModel" class="form-label text-muted mb-1" style="font-size:0.85rem">Model Selection</label>
+        <input type="text" class="form-control form-controll-sm" id="selectedModel" v-model="selectedModel"
           placeholder="gpt-4o-mini">
       </div>
     </div>
