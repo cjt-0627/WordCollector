@@ -10,6 +10,10 @@ const props = defineProps({
 
 const activeTab = ref("words");
 
+const apiKey = ref("");
+const apiUrl = ref("");
+const selectedModel = ref("");
+
 const name = ref("");
 
 function sendMsgToBg() {
@@ -49,33 +53,50 @@ function closeModal() {
     <ul class="nav nav-underline mb-3" id="popupTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link" :class="{ active: activeTab === 'words' }" @click="activeTab = 'words'" type="button">
-          book
+          Volume
         </button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" :class="{ active: activeTab === 'settings' }" @click="activeTab = 'settings'"
           type="button">
-          settings
+          Settings
         </button>
       </li>
     </ul>
-
+    
+    <!-- Volume -->
     <div class="tab-content">
       <div v-show="activeTab === 'words'" class="tab-pane fade show active">
         <button type="button" class="btn btn-success w-100 mb-3">collected words</button>
-
       </div>
-
-      <div v-show="activeTab === 'settings'" class="tab-pane fade show active">
-        <h6 class="mb-3">preference</h6>
-
-
-
-      </div>
-
     </div>
+    
+    <!-- Settings -->
+    <div v-show="activeTab === 'settings'" class="tab-pane fade show active">
+      <h6 class="mb-2">API settings</h6>
+
+      <div class="mb-2">
+        <label for="apiUrl" class="form-label text-muted mb-1" style="font-size:0.85rem">API URL</label>
+        <input type="text" class="form-control form-controll-sm" id="apiUrl" v-model="apiUrl"
+          placeholder="https://api.openai.com/v1/...">
+      </div>
+
+      <div class="mb-2">
+        <label for="apiKey" class="form-label text-muted mb-1" style="font-size:0.85rem">API Key</label>
+        <input type="password" class="form-control form-controll-sm" id="apiKey" v-model="apiKey" placeholder="sk-...">
+      </div>
+
+      <div class="mb-2">
+        <label for="modelSelect" class="form-label text-muted mb-1" style="font-size:0.85rem">Model Selection</label>
+        <input type="text" class="form-control form-controll-sm" id="modelSelect" v-model="modelSelect"
+          placeholder="gpt-4o-mini">
+      </div>
+    </div>
+
+    
   </div>
 
+  <!-- Content Menu -->
   <div v-if="!props.isPopup && isModalVisible" class="position-fixed top-0 end-0 m-4" style="z-index: 2147483647;">
     <div
       style="width: 22rem; background-color: #fffbcc; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
@@ -96,4 +117,6 @@ function closeModal() {
       </div>
     </div>
   </div>
+
+
 </template>
