@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, watch } from "vue";
 
 const props = defineProps({
   isPopup: {
@@ -13,6 +13,26 @@ const activeTab = ref("words");
 const apiKey = ref("");
 const apiUrl = ref("");
 const selectedModel = ref("");
+
+const translationMethod=ref("ai");
+
+onMounted(()=>{
+  chrome.storage.local.get(['translationMethod','apiKey','apiUrl','selectedModel'],(result)=>{
+    if(result.translationMethod) translationMethod.value=result.translationMethod
+    if(result.apiKey) apiKey.value=result.apiKey
+    if(result.apiUrl) apiUrl.value=result.apiUrl
+    if(result.selectedModel) selectedModel.value=result.selectedModel
+  })
+})
+
+watch([translationMethod,apiKey,apiUrl,selectedModel],()=>{
+  chrome.storage.local.set({
+    translationMethod:translationMethod,
+    apiKey:apiKey.value,
+    apiUrl:apiUrl,
+    selectedModel:selectedModel.value
+  })
+})
 
 const name = ref("");
 
@@ -29,6 +49,7 @@ function sendMsgToBg() {
     }
   );
 }
+
 const isModalVisible = ref(false);
 const currentWord = ref("");
 const translationText = ref("");
@@ -37,9 +58,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "show-translation-modal") {
     currentWord.value = request.word;
     isModalVisible.value = true;
-    translationText.value = `(searching ${request.word})`;
-    sendResponse({ status: "modal_opened" });
+
+    if(translationMethod.value==='ai'){
+      translationText.value = `(AI searching ${request.word}...)`;
+    }else{
+      translationText.value=`(Google translating ${request.word}...)`
+    }
   }
+  sendResponse({ status: "modal_opened" });
+
+  
 });
 
 function closeModal() {
@@ -74,6 +102,14 @@ function closeModal() {
     <!-- Settings -->
     <div v-show="activeTab === 'settings'" class="tab-pane fade show active">
       <h6 class="mb-2">API settings</h6>
+
+      <div class="mb-2">
+        <label for="translationMethod" class="form-label text-muted mb-1" style="font-size:0.85rem">Translation Method</label>
+        <select class="form-control form-control-sm" id="translationMethod" v-model="translationMethod">
+          <option value="ai">AI translation</option>
+          <option value="google">Google translation</option>
+        </select>
+      </div>
 
       <div class="mb-2">
         <label for="apiUrl" class="form-label text-muted mb-1" style="font-size:0.85rem">API URL</label>
