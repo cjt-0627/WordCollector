@@ -8,29 +8,29 @@
     "permissions": [
         "activeTab",
         "contextMenus",
-        "storage"
+        "storage",
+        "identity" 
     ],
+    "oauth2": {      
+        "client_id": "607973663178-qkhdft0o6ucq1uu73rlp8kv6oo28jj76.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile"
+        ]
+    },
     "background": {
         "service_worker": "background/background.js"
     },
     "content_scripts": [
         {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "main.js"
-            ]
+            "matches": ["<all_urls>"],
+            "js": ["main.js"]
         }
     ],
     "web_accessible_resources": [
         {
-            "resources": [
-                "content.css"
-            ],
-            "matches": [
-                "<all_urls>"
-            ]
+            "resources": ["content.css"],
+            "matches": ["<all_urls>"]
         }
     ]
 }

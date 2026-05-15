@@ -1,5 +1,40 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from "vue"
+import { db, auth, googleProvider } from './firebase'
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { signInWithCredential, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth"
+
+const currentUser = ref(null)
+
+async function saveWord() {
+  if (!currentWord.value) return
+
+  chrome.storage.local.get(['uid'], async (result) => {
+    const uid = result.uid
+
+    if (!uid) {
+      alert("Please sign in your Google account!")
+      return
+    }
+
+    try {
+      const userWordRef = collection(db, "users", uid, "words")
+      await addDoc(userWordRef, {
+        word: currentWord.value,
+        translation: translationText.value,
+        createdAt: serverTimestamp()
+      })
+
+      closeModal()
+      console.log('success to save word')
+
+    } catch (error) {
+      console.error("Error adding document: ", error)
+      alert("fail to save")
+    }
+  })
+}
+
 const props = defineProps({
   isPopup: {
     type: Boolean,
@@ -13,32 +48,81 @@ const apiKey = ref("")
 const apiUrl = ref("")
 const selectedModel = ref("")
 
-const translationMethod=ref("ai")
+const translationMethod = ref("ai")
 
-const isLoaded =ref(false)
+const isLoaded = ref(false)
 
-onMounted(()=>{
-  chrome.storage.local.get(['translationMethod','apiKey','apiUrl','selectedModel'],(result)=>{
-    if(result.translationMethod) translationMethod.value=result.translationMethod
-    if(result.apiKey) apiKey.value=result.apiKey
-    if(result.apiUrl) apiUrl.value=result.apiUrl
-    if(result.selectedModel) selectedModel.value=result.selectedModel
+onMounted(() => {
+  chrome.storage.local.get(['translationMethod', 'apiKey', 'apiUrl', 'selectedModel'], (result) => {
+    if (result.translationMethod) translationMethod.value = result.translationMethod
+    if (result.apiKey) apiKey.value = result.apiKey
+    if (result.apiUrl) apiUrl.value = result.apiUrl
+    if (result.selectedModel) selectedModel.value = result.selectedModel
 
-    nextTick(()=>{
-      isLoaded.value=true
+    if (props.isPopup) {
+      onAuthStateChanged(auth, (user => {
+        if (user) {
+          currentUser.value = user
+          chrome.storage.local.set({ uid: user.uid })
+        } else {
+          currentUser.value = null
+          chrome.storage.local.remove('uid')
+        }
+      }))
+    }
+
+    nextTick(() => {
+      isLoaded.value = true
     })
   })
 })
 
-watch([translationMethod,apiKey,apiUrl,selectedModel],()=>{
 
-  if(!isLoaded.value) return
+async function loginWithGoogle() {
+
+  chrome.identity.getAuthToken({ interactive: true }, async (token) => {
+
+    if (chrome.runtime.lastError) {
+      console.error("Chrome Identity fault: ", chrome.runtime.lastError.message)
+      alert("fail to authentication: " + chrome.runtime.lastError.message)
+      return
+    }
+
+
+    try {
+      const credential = GoogleAuthProvider.credential(null, token)
+
+
+      await signInWithCredential(auth, credential)
+
+      console.log("sign in Google success!")
+    } catch (error) {
+      console.error("fail to login Firebase: ", error)
+      alert("fail to login: " + error.message)
+    }
+  })
+}
+
+async function handleSignOut() {
+  try {
+    await signOut(auth)
+  } catch (error) {
+    console.error("Sign out failed: ", error)
+  }
+
+}
+
+
+
+watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
+
+  if (!isLoaded.value) return
 
   chrome.storage.local.set({
-    translationMethod:translationMethod.value,
-    apiKey:apiKey.value,
-    apiUrl:apiUrl.value,
-    selectedModel:selectedModel.value
+    translationMethod: translationMethod.value,
+    apiKey: apiKey.value,
+    apiUrl: apiUrl.value,
+    selectedModel: selectedModel.value
   })
 })
 
@@ -67,35 +151,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     currentWord.value = request.word
     isModalVisible.value = true
 
-    if(translationMethod.value==='ai'){
+    if (translationMethod.value === 'ai') {
       translationText.value = `(AI searching ${request.word}...)`
-    }else{
-      translationText.value=`(Google translating ${request.word}...)`
+    } else {
+      translationText.value = `(Google translating ${request.word}...)`
       translateWithGoogle(request.word)
     }
   }
   sendResponse({ status: "modal_opened" });
 
-  
+
 });
 
 function closeModal() {
   isModalVisible.value = false;
 }
 
-async function translateWithGoogle(word){
-  try{
+async function translateWithGoogle(word) {
+  try {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(word)}`
-    const response= await fetch(url)
-    const data=await response.json();
-    if(data && data[0] && data[0][0] && data[0][0][0]){
-      translationText.value=data[0][0][0]
-    }else{
-      translationText.value="fail to translate"
+    const response = await fetch(url)
+    const data = await response.json();
+    if (data && data[0] && data[0][0] && data[0][0][0]) {
+      translationText.value = data[0][0][0]
+    } else {
+      translationText.value = "fail to translate"
     }
-  }catch(error){
+  } catch (error) {
     console.error("Google Translate Error:", error)
-    translationText.value="An error occurred"
+    translationText.value = "An error occurred"
   }
 }
 
@@ -117,20 +201,21 @@ async function translateWithGoogle(word){
         </button>
       </li>
     </ul>
-    
+
     <!-- Volume -->
     <div class="tab-content">
       <div v-show="activeTab === 'words'" class="tab-pane fade show active">
         <button type="button" class="btn btn-success w-100 mb-3">collected words</button>
       </div>
     </div>
-    
+
     <!-- Settings -->
     <div v-show="activeTab === 'settings'" class="tab-pane fade show active">
       <h6 class="mb-2">API settings</h6>
 
       <div class="mb-2">
-        <label for="translationMethod" class="form-label text-muted mb-1" style="font-size:0.85rem">Translation Method</label>
+        <label for="translationMethod" class="form-label text-muted mb-1" style="font-size:0.85rem">Translation
+          Method</label>
         <select class="form-control form-control-sm" id="translationMethod" v-model="translationMethod">
           <option value="ai">AI translation</option>
           <option value="google">Google translation</option>
@@ -153,9 +238,23 @@ async function translateWithGoogle(word){
         <input type="text" class="form-control form-controll-sm" id="selectedModel" v-model="selectedModel"
           placeholder="gpt-4o-mini">
       </div>
+      <hr class="my-3 text-muted">
+
+      <h6 class="mb-2">Account</h6>
+      <div v-if="currentUser" class="mb-2">
+        <p class="text-muted mb-2" style="font-size:0.85rem">current sign in: <br>{{ currentUser.email }}</p>
+        <button type="button" class="btn btn-outline-danger btn-sm w-100" @click="handleSignOut">
+          sign out
+        </button>
+      </div>
+      <div v-else class="mb-2">
+        <button type="button" class="btn btn-primary btn-sm w-100" @click="loginWithGoogle">
+          sign with Google
+        </button>
+      </div>
     </div>
 
-    
+
   </div>
 
   <!-- Content Menu -->
@@ -174,7 +273,7 @@ async function translateWithGoogle(word){
             @click="closeModal">cancel</button>
           <button
             style="background: #198754; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;"
-            @click="closeModal">store word</button>
+            @click="saveWord">save word</button>
         </div>
       </div>
     </div>
