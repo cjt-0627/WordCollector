@@ -1,6 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-
+import { ref, onMounted, watch, nextTick } from "vue"
 const props = defineProps({
   isPopup: {
     type: Boolean,
@@ -8,13 +7,15 @@ const props = defineProps({
   }
 });
 
-const activeTab = ref("words");
+const activeTab = ref("words")
 
-const apiKey = ref("");
-const apiUrl = ref("");
-const selectedModel = ref("");
+const apiKey = ref("")
+const apiUrl = ref("")
+const selectedModel = ref("")
 
-const translationMethod=ref("ai");
+const translationMethod=ref("ai")
+
+const isLoaded =ref(false)
 
 onMounted(()=>{
   chrome.storage.local.get(['translationMethod','apiKey','apiUrl','selectedModel'],(result)=>{
@@ -22,10 +23,17 @@ onMounted(()=>{
     if(result.apiKey) apiKey.value=result.apiKey
     if(result.apiUrl) apiUrl.value=result.apiUrl
     if(result.selectedModel) selectedModel.value=result.selectedModel
+
+    nextTick(()=>{
+      isLoaded.value=true
+    })
   })
 })
 
 watch([translationMethod,apiKey,apiUrl,selectedModel],()=>{
+
+  if(!isLoaded.value) return
+
   chrome.storage.local.set({
     translationMethod:translationMethod.value,
     apiKey:apiKey.value,
@@ -34,7 +42,7 @@ watch([translationMethod,apiKey,apiUrl,selectedModel],()=>{
   })
 })
 
-const name = ref("");
+const name = ref("")
 
 function sendMsgToBg() {
   chrome.runtime.sendMessage(
@@ -50,17 +58,17 @@ function sendMsgToBg() {
   );
 }
 
-const isModalVisible = ref(false);
-const currentWord = ref("");
-const translationText = ref("");
+const isModalVisible = ref(false)
+const currentWord = ref("")
+const translationText = ref("")
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "show-translation-modal") {
-    currentWord.value = request.word;
-    isModalVisible.value = true;
+    currentWord.value = request.word
+    isModalVisible.value = true
 
     if(translationMethod.value==='ai'){
-      translationText.value = `(AI searching ${request.word}...)`;
+      translationText.value = `(AI searching ${request.word}...)`
     }else{
       translationText.value=`(Google translating ${request.word}...)`
       translateWithGoogle(request.word)
