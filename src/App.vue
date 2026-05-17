@@ -69,6 +69,17 @@ onMounted(() => {
           chrome.storage.local.remove('uid')
         }
       }))
+
+      chrome.identity.getAuthToken({ interactive: false }, async (token) => {
+        if (token && !currentUser.value) {
+          try {
+            const credential = GoogleAuthProvider.credential(null, token)
+            await signInWithCredential(auth, credential)
+          } catch (error) {
+            console.error("Auto login failed: ", error)
+          }
+        }
+      })
     }
 
     nextTick(() => {
