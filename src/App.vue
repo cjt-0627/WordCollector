@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from "vue"
 import { db, auth, googleProvider } from './firebase'
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
 import { signInWithCredential, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth"
 
 const currentUser = ref(null)
@@ -19,6 +19,15 @@ async function saveWord() {
 
     try {
       const userWordRef = collection(db, "users", uid, "words")
+      const q = query(userWordRef, where("word", "==", currentWord.value))
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        alert(`"${currentWord.value}" exsists!`)
+        closeModal()
+        return
+      }
+
       await addDoc(userWordRef, {
         word: currentWord.value,
         translation: translationText.value,
@@ -29,8 +38,11 @@ async function saveWord() {
       console.log('success to save word')
 
     } catch (error) {
+
       console.error("Error adding document: ", error)
       alert("fail to save")
+
+
     }
   })
 }
