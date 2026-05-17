@@ -82,16 +82,7 @@ onMounted(() => {
         }
       }))
 
-      chrome.identity.getAuthToken({ interactive: false }, async (token) => {
-        if (token && !currentUser.value) {
-          try {
-            const credential = GoogleAuthProvider.credential(null, token)
-            await signInWithCredential(auth, credential)
-          } catch (error) {
-            console.error("Auto login failed: ", error)
-          }
-        }
-      })
+  
     }
 
     nextTick(() => {
@@ -101,29 +92,9 @@ onMounted(() => {
 })
 
 
-async function loginWithGoogle() {
-
-  chrome.identity.getAuthToken({ interactive: true }, async (token) => {
-
-    if (chrome.runtime.lastError) {
-      console.error("Chrome Identity fault: ", chrome.runtime.lastError.message)
-      alert("fail to authentication: " + chrome.runtime.lastError.message)
-      return
-    }
-
-
-    try {
-      const credential = GoogleAuthProvider.credential(null, token)
-
-
-      await signInWithCredential(auth, credential)
-
-      console.log("sign in Google success!")
-    } catch (error) {
-      console.error("fail to login Firebase: ", error)
-      alert("fail to login: " + error.message)
-    }
-  })
+function loginWithGoogle() {
+  const loginUrl="https://word-collector-62657.web.app"
+  chrome.tabs.create({url:loginUrl})
 }
 
 async function handleSignOut() {

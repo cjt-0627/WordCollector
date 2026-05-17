@@ -8,18 +8,17 @@
     "permissions": [
         "activeTab",
         "contextMenus",
-        "storage",
-        "identity" 
+        "storage"
     ],
-    "oauth2": {      
-        "client_id": "607973663178-qkhdft0o6ucq1uu73rlp8kv6oo28jj76.apps.googleusercontent.com",
-        "scopes": [
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile"
+    "externally_connectable": {
+        "matches": [
+            "https://word-collector-62657.web.app/*",
+            "https://word-collector-62657.firebaseapp.com/*"
         ]
     },
     "background": {
-        "service_worker": "background/background.js"
+        "service_worker": "background/background.js",
+        "type": "module"
     },
     "content_scripts": [
         {

@@ -9,12 +9,8 @@ export default defineConfig({
     viteStaticCopy({
     targets: [
       {
-        src: 'src/background/background.js', // Source path
-        dest: 'background', // Destination folder inside dist
-      },
-      {
-        src: 'index.html', // Source path
-        dest: '' // Destination folder is dist itself
+        src: 'index.html', // 只留 index.html 即可
+        dest: '' 
       }
     ],
   })],
