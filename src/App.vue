@@ -53,54 +53,63 @@ const translationMethod = ref("ai")
 const isLoaded = ref(false)
 
 onMounted(() => {
-  chrome.storage.local.get(['translationMethod', 'apiKey', 'apiUrl', 'selectedModel'], (result) => {
-    if (result.translationMethod) translationMethod.value = result.translationMethod
-    if (result.apiKey) apiKey.value = result.apiKey
-    if (result.apiUrl) apiUrl.value = result.apiUrl
-    if (result.selectedModel) selectedModel.value = result.selectedModel
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
 
-    if (props.isPopup) {
-      onAuthStateChanged(auth, (user => {
-        if (user) {
-          currentUser.value = user
-          chrome.storage.local.set({ uid: user.uid })
-        } else {
-          currentUser.value = null
-          chrome.storage.local.remove('uid')
+    chrome.storage.local.get(['translationMethod', 'apiKey', 'apiUrl', 'selectedModel', 'pendingGoogleToken'], async (result) => {
+      
+      if (result.translationMethod) translationMethod.value = result.translationMethod
+      if (result.apiKey) apiKey.value = result.apiKey
+      if (result.apiUrl) apiUrl.value = result.apiUrl
+      if (result.selectedModel) selectedModel.value = result.selectedModel
+
+
+
+      if (props.isPopup) {
+        
+
+        if (result.pendingGoogleToken) {
+          try {
+            console.log('found Google Token, start to login Firebase')
+            const credential = GoogleAuthProvider.credential(result.pendingGoogleToken)
+            const userCredential = await signInWithCredential(auth, credential)
+
+            chrome.storage.local.set({ uid: userCredential.user.uid })
+            currentUser.value = userCredential.user
+            alert('Login success')
+          } catch (error) {
+            console.error("Fail to login Firebase: ", error)
+            alert("Fail to verify Firebase: " + error.message)
+          } finally {
+
+            chrome.storage.local.remove('pendingGoogleToken')
+          }
         }
-      }))
-    }
 
-    nextTick(() => {
-      isLoaded.value = true
+
+        onAuthStateChanged(auth, (user => {
+          if (user) {
+            currentUser.value = user
+            chrome.storage.local.set({ uid: user.uid })
+          } else {
+            currentUser.value = null
+            chrome.storage.local.remove('uid')
+          }
+        }))
+      }
+
+      nextTick(() => {
+        isLoaded.value = true
+      })
     })
-  })
+  }
 })
 
 
 async function loginWithGoogle() {
+  if (typeof chrome !== 'undefined' && chrome.runtime) {
+    chrome.runtime.sendMessage({ action: "start_google_login" })
 
-  chrome.identity.getAuthToken({ interactive: true }, async (token) => {
-
-    if (chrome.runtime.lastError) {
-      console.error("Chrome Identity fault: ", chrome.runtime.lastError.message)
-      alert("fail to authentication: " + chrome.runtime.lastError.message)
-      return
-    }
-
-
-    try {
-      const credential = GoogleAuthProvider.credential(null, token)
-
-
-      await signInWithCredential(auth, credential)
-
-      console.log("sign in Google success!")
-    } catch (error) {
-      console.error("fail to login Firebase: ", error)
-      alert("fail to login: " + error.message)
-    }
-  })
+  }
 }
 
 async function handleSignOut() {
