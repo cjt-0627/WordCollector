@@ -41,8 +41,10 @@ function saveWord() {
       setTimeout(() => {
         closeModal()
       }, 1500)
+    }else if(response && response.reason === "duplicate"){
+      alert(`${currentWord.value} has existed!`)
     } else {
-      alert("Fail to save word" + (response?.error || "Unknown error"));
+      alert("Fail to save word" + (response?.error || "Unknown error"))
     }
   });
 }

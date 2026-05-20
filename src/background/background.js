@@ -1,5 +1,5 @@
 import { db } from '../firebase'
-import { collection, addDoc, serverTimestamp} from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -43,6 +43,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       try {
         const userWordRef = collection(db, "users", uid, "words")
+
+        const q = query(userWordRef, where("word", "==", request.word))
+        const querySnapshot = await getDocs(q)
+
+        if (!querySnapshot.empty) {
+          sendResponse({ success: false, reason: "duplicate" })
+          return true
+        }
         await addDoc(userWordRef, {
           word: request.word,
           translation: request.translation,
