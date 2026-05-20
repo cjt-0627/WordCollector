@@ -12,7 +12,7 @@ const shadowRoot =host.attachShadow({mode:'open'})
 const appContainer=document.createElement('div')
 shadowRoot.appendChild(appContainer)
 
-const app=createApp(App,{isPopup:false})
+const app=createApp(ContentApp,{isPopup:false})
 app.mount(appContainer)
 
 
