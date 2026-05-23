@@ -89,10 +89,10 @@ async function translateWithGoogle(word) {
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
           <button
             style="background: white; border: 1px solid #6c757d; color: #6c757d; padding: 6px 12px; border-radius: 4px; cursor: pointer;"
-            @click="closeModal">cancel</button>
+            @click="closeModal">Cancel</button>
           <button
             style="background: #198754; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;"
-            @click="saveWord">save word</button>
+            @click="saveWord">Save word</button>
         </div>
       </div>
 
