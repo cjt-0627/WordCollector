@@ -81,11 +81,21 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     const selectedWord = info.selectionText;
     console.log("collected word: ", selectedWord);
 
-    //logic
-    chrome.tabs.sendMessage(tab.id, {
-      action: "show-translation-modal",
-      word: selectedWord
+
+    chrome.storage.local.get(['translationMethod'], (result) => {
+      const method = result.translationMethod || "google"
+      if (method === "cambridge") {
+        const cambridgeUrl = `https://dictionary.cambridge.org/dictionary/english-chinese-traditional/${encodeURIComponent(selectedWord)}`
+        chrome.tabs.create({ url: cambridgeUrl })
+      } else {
+        chrome.tabs.sendMessage(tab.id, {
+          action: "show-translation-modal",
+          word: selectedWord
+        })
+      }
     })
+
+
   }
 })
 

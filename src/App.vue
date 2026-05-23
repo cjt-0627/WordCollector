@@ -24,6 +24,8 @@ const isSidebarOpen = ref(false)
 const savedWords = ref([])
 const isLoadingWords = ref(false)
 
+const books=ref(["collected words"])
+
 let startX = 0
 
 function handleSwipeStart(e) {
@@ -226,7 +228,7 @@ watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
               
               <div class="word-content d-flex flex-column p-3">
                 <span class="fw-bold fs-6 text-dark">{{ item.word }}</span>
-                <span class="text-muted" style="font-size: 0.85rem;">{{ item.translation }}</span>
+                <span class="text-muted mt-1" style="font-size: 0.85rem; white-space: pre-wrap; line-height:1.6;">{{ item.translation }}</span>
               </div>
 
               <button class="delete-btn btn btn-danger d-flex align-items-center justify-content-center"
@@ -254,6 +256,7 @@ watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
         <select class="form-control form-control-sm" id="translationMethod" v-model="translationMethod">
           <option value="ai">AI translation</option>
           <option value="google">Google translation</option>
+          <option value="cambridge">Cambridge search</option>
         </select>
       </div>
 

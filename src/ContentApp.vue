@@ -8,11 +8,26 @@ const isSuccess = ref(false)
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "show-translation-modal") {
-    currentWord.value = request.word
-    isModalVisible.value = true
-    translationText.value = `(Google translating ${request.word}...)`
-    isSuccess.value = false
-    translateWithGoogle(request.word)
+    chrome.storage.local.get(['translationMethod', 'selectedModel', 'apiKey', 'apiUrl'], (result) => {
+      const method = result.translationMethod || "google"
+      const model = result.selectedModel || ""
+      if (method === 'ai' && model.trim() === "") {
+        alert("Please set up your AI model!")
+        return
+      }
+      currentWord.value = request.word
+      isModalVisible.value = true
+      isSuccess.value = false
+
+      if (method === "ai") {
+        translationText.value = `(AI translating ${request.word}...)`
+        translateWithAI(request.word, result)
+      } else {
+        translationText.value = `(Google translating ${request.word})`
+        translateWithGoogle(request.word)
+      }
+    })
+
   }
   sendResponse({ status: "modal_opened" })
 });
@@ -41,7 +56,7 @@ function saveWord() {
       setTimeout(() => {
         closeModal()
       }, 1500)
-    }else if(response && response.reason === "duplicate"){
+    } else if (response && response.reason === "duplicate") {
       alert(`${currentWord.value} has existed!`)
     } else {
       alert("Fail to save word" + (response?.error || "Unknown error"))
@@ -61,6 +76,17 @@ async function translateWithGoogle(word) {
     }
   } catch (error) {
     translationText.value = "An error occurred"
+  }
+}
+
+async function translateWithAI(word, settings){
+  try{
+    const{apiUrl,apiKey,selectedModel}=setttings
+    //to-do 
+    translationText.value=`AI translation result`
+  }catch(error){
+    console.error(error)
+    translationText.value="AI translation failed"
   }
 }
 </script>
