@@ -1,5 +1,5 @@
 import { db } from '../firebase'
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, deleteDoc, setDoc, getDoc } from "firebase/firestore"
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -34,8 +34,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "save_word_to_firebase") {
-    chrome.storage.local.get(['uid'], async (result) => {
+    chrome.storage.local.get(['uid','defaultBook'], async (result) => {
       const uid = result.uid
+
+      const currentBook=result.defaultBook || "collected words"
+
       if (!uid) {
         sendResponse({ success: false, error: "Not logged in" })
         return
@@ -54,7 +57,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         await addDoc(userWordRef, {
           word: request.word,
           translation: request.translation,
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          book: currentBook
         })
         console.log("Saved word success")
         sendResponse({ success: true })
