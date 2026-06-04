@@ -39,6 +39,8 @@ const renameInput = ref("")
 let pressTimer = null
 let isLongPress = false
 
+const quickNote = ref("")
+
 function cancelLongPress() {
   if (pressTimer) clearTimeout(pressTimer)
 }
@@ -112,39 +114,31 @@ function handleBookSwipeEnd(e, book) {
   }
 }
 
-function handleBookClick(book){
-  if(isLongPress){
-    isLongPress=false
-    return
-  }
-  fetchAndShowWords(book)
-}
-
-function handleBookClick(book){
-  if(isLongPress){
+function handleBookClick(book) {
+  if (isLongPress) {
     isLongPress = false
     return
   }
   fetchAndShowWords(book)
 }
 
-async function saveRename(){
-  const oldName=renamingBook.value
-  const newName=renameInput.value.trim()
+async function saveRename() {
+  const oldName = renamingBook.value
+  const newName = renameInput.value.trim()
 
-  if(!newName || newName===oldName){
-    renamingBook.value=null
+  if (!newName || newName === oldName) {
+    renamingBook.value = null
     return
   }
-  if(books.value.includes(newName)){
+  if (books.value.includes(newName)) {
     alert("This book name already exists!")
     return
   }
 
-  const index=books.value.indexOf(oldName)
-  if(index !==-1) books.value[index]=newName
-  
-  if(defaultBook.value===oldName) setDefaultBook(newName)
+  const index = books.value.indexOf(oldName)
+  if (index !== -1) books.value[index] = newName
+
+  if (defaultBook.value === oldName) setDefaultBook(newName)
   //
 }
 
@@ -172,6 +166,16 @@ async function deleteBook(bookName) {
 
   if (defaultBook.value === bookName) {
     setDefaultBook('collected words')
+  }
+}
+
+
+function clearNote() {
+
+  if (!quickNote.value.trim()) return
+  
+  if (confirm("Are you sure to clear your note place?")) {
+    quickNote.value = ""
   }
 }
 
@@ -255,7 +259,7 @@ async function fetchAndShowWords(bookName = "collected words") {
 onMounted(() => {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
 
-    chrome.storage.local.get(['translationMethod', 'apiKey', 'apiUrl', 'selectedModel', 'pendingGoogleToken', 'books', 'defaultBook'], async (result) => {
+    chrome.storage.local.get(['translationMethod', 'apiKey', 'apiUrl', 'selectedModel', 'pendingGoogleToken', 'books', 'defaultBook', 'quickNote'], async (result) => {
 
       if (result.translationMethod) translationMethod.value = result.translationMethod
       if (result.apiKey) apiKey.value = result.apiKey
@@ -264,6 +268,8 @@ onMounted(() => {
 
       if (result.books) books.value = Array.isArray(result.books) ? result.books : ["collected words"]
       if (result.defaultBook) defaultBook.value = result.defaultBook
+
+      if (result.quickNote) quickNote.value = result.quickNote
 
       if (props.isPopup) {
         if (result.pendingGoogleToken) {
@@ -346,6 +352,11 @@ watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
   })
 })
 
+watch(quickNote, (newNote) => {
+  if (!isLoaded.value) return
+  chrome.storage.local.set({ quickNote: newNote })
+})
+
 
 
 </script>
@@ -363,6 +374,11 @@ watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
         <button class="nav-link" :class="{ active: activeTab === 'settings' }" @click="activeTab = 'settings'"
           type="button">
           Settings
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" :class="{ active: activeTab === 'note' }" @click="activeTab = 'note'" type="button">
+          Notes
         </button>
       </li>
     </ul>
@@ -459,6 +475,35 @@ watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
           </li>
         </ul>
       </div>
+    </div>
+
+    <div v-show="activeTab === 'note'" class="tab-pane fade show active">
+      
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="m-0">Notes</h6>
+        <button 
+          class="btn btn-sm btn-outline-danger d-flex align-items-center" 
+          @click="clearNote"
+          :disabled="!quickNote.trim()"
+          style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-trash-fill me-1" viewBox="0 0 16 16">
+            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+          </svg>
+          clear
+        </button>
+      </div>
+
+      <div class="mb-2">
+        <textarea 
+          class="form-control" 
+          v-model="quickNote" 
+          placeholder="note the word you want to search for..."
+          rows="12"
+          style="font-size: 0.85rem; resize: none; line-height: 1.5;"
+        ></textarea>
+      </div>
+      <small class="text-muted" style="font-size: 0.75rem;">*The notes are stored on local.</small>
     </div>
 
     <div v-show="activeTab === 'settings'" class="tab-pane fade show active">
