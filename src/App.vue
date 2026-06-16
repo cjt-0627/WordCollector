@@ -40,6 +40,94 @@ let pressTimer = null
 let isLongPress = false
 
 const quickNote = ref("")
+const draggedBookIndex = ref(null)
+
+const isDragging = ref(false)
+
+function handleDragEnd() {
+  isDragging.value = false
+  draggedBookIndex.value = null
+}
+
+async function handleDeleteDrop(e) {
+  isDragging.value = false
+
+
+  const indexStr = e.dataTransfer.getData('text/plain')
+  const targetIndex = indexStr !== '' ? parseInt(indexStr, 10) : draggedBookIndex.value
+
+  if (targetIndex === null || isNaN(targetIndex)) return
+
+  const bookToDelete = books.value[targetIndex]
+
+  if (!bookToDelete || bookToDelete === 'collected words') {
+    draggedBookIndex.value = null
+    return
+  }
+
+  setTimeout(async () => {
+    if (confirm(`Are you sure you want to delete "${bookToDelete}"?`)) {
+
+      books.value.splice(targetIndex, 1)
+
+      if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.set({ books: [...books.value] })
+      }
+
+      if (currentUser.value) {
+        try {
+          const uid = currentUser.value.uid
+          await setDoc(doc(db, "users", uid), { books: [...books.value] }, { merge: true })
+        } catch (error) {
+          console.error("Fail to sync deleted book to Firebase", error)
+        }
+      }
+
+      if (defaultBook.value === bookToDelete) {
+        setDefaultBook('collected words')
+      }
+
+      if (swipedBook.value === bookToDelete) {
+        swipedBook.value = null
+      }
+    }
+
+    draggedBookIndex.value = null
+  }, 50)
+}
+
+function handleDragStart(e,index) {
+  draggedBookIndex.value = index
+  isDragging.value = true
+
+  if (e && e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index.toString())
+  }
+}
+
+async function handleDrop(index) {
+  isDragging.value = false
+  if (draggedBookIndex.value === null || draggedBookIndex.value === index) return
+
+  const draggedItem = books.value.splice(draggedBookIndex.value, 1)[0]
+  books.value.splice(index, 0, draggedItem)
+  draggedBookIndex.value = null
+
+  if (typeof chrome !== 'undefined' && chrome.storage) {
+    chrome.storage.local.set({ books: [...books.value] })
+  }
+
+  if (currentUser.value) {
+    try {
+      const uid = currentUser.value.uid
+      await setDoc(doc(db, "users", uid), { books: [...books.value] }, { merge: true })
+    } catch (error) {
+      console.error("Fail to sync books order to Firebase: ", error)
+    }
+  }
+
+}
 
 function cancelLongPress() {
   if (pressTimer) clearTimeout(pressTimer)
@@ -173,7 +261,7 @@ async function deleteBook(bookName) {
 function clearNote() {
 
   if (!quickNote.value.trim()) return
-  
+
   if (confirm("Are you sure to clear your note place?")) {
     quickNote.value = ""
   }
@@ -393,7 +481,10 @@ watch(quickNote, (newNote) => {
         </div>
 
         <ul class="list-group mb-5">
-          <li v-for="book in books" :key="book" class="list-group-item p-0 overflow-hidden position-relative bg-danger">
+          <li v-for="(book, index) in books" :key="book"
+            class="list-group-item p-0 overflow-hidden position-relative bg-danger" draggable="true"
+            @dragstart="handleDragStart($event, index)" @dragover.prevent @dragenter.prevent @drop="handleDrop(index)"
+            @dragend="handleDragEnd">
 
             <div class="book-swipe-container bg-white" :class="{ 'is-swiped': swipedBook === book }"
               @touchstart="handleBookSwipeStart" @touchend="handleBookSwipeEnd($event, book)"
@@ -416,6 +507,21 @@ watch(quickNote, (newNote) => {
             </div>
           </li>
         </ul>
+
+        <div v-show="isDragging"
+          class="position-fixed bottom-0 start-50 translate-middle-x mb-4 px-4 py-2 rounded-pill d-flex justify-content-center align-items-center shadow-lg"
+          style="background-color: rgba(220, 53, 69, 0.95); z-index: 2147483647; animation: slideUp 0.2s ease-out; cursor: pointer; min-width: 180px;"
+          @dragover.prevent @dragenter.prevent @drop="handleDeleteDrop($event)">
+
+          <div class="text-white fw-bold d-flex align-items-center fs-6 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+              class="bi bi-trash-fill me-2 pointer-events-none" viewBox="0 0 16 16">
+              <path
+                d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
+            </svg>
+            Drop to Delete
+          </div>
+        </div>
 
         <div v-if="swipedBook && swipedBook !== 'collected words'"
           class="position-fixed bottom-0 start-0 w-100 p-3 d-flex justify-content-between align-items-center shadow-lg"
@@ -478,30 +584,23 @@ watch(quickNote, (newNote) => {
     </div>
 
     <div v-show="activeTab === 'note'" class="tab-pane fade show active">
-      
+
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h6 class="m-0">Notes</h6>
-        <button 
-          class="btn btn-sm btn-outline-danger d-flex align-items-center" 
-          @click="clearNote"
-          :disabled="!quickNote.trim()"
-          style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-trash-fill me-1" viewBox="0 0 16 16">
-            <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+        <button class="btn btn-sm btn-outline-danger d-flex align-items-center" @click="clearNote"
+          :disabled="!quickNote.trim()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor"
+            class="bi bi-trash-fill me-1" viewBox="0 0 16 16">
+            <path
+              d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0" />
           </svg>
           clear
         </button>
       </div>
 
       <div class="mb-2">
-        <textarea 
-          class="form-control" 
-          v-model="quickNote" 
-          placeholder="note the word you want to search for..."
-          rows="12"
-          style="font-size: 0.85rem; resize: none; line-height: 1.5;"
-        ></textarea>
+        <textarea class="form-control" v-model="quickNote" placeholder="note the word you want to search for..."
+          rows="12" style="font-size: 0.85rem; resize: none; line-height: 1.5;"></textarea>
       </div>
       <small class="text-muted" style="font-size: 0.75rem;">*The notes are stored on local.</small>
     </div>
