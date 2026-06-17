@@ -16,7 +16,7 @@
     "contextMenus"
   ],
   "oauth2": {
-    "client_id": "607973663178-r4sl2nmgsb88rsdo583b2v4ehdjb9k62.apps.googleusercontent.com",
+    "client_id": "607973663178-77310te3pai19cup4ef6g61u5bn4us5s.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"

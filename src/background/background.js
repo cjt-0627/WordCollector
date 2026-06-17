@@ -3,36 +3,32 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, delete
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-  if (request.action === "start_google_login") {
-    const clientId = "607973663178-r4sl2nmgsb88rsdo583b2v4ehdjb9k62.apps.googleusercontent.com"
-    const redirectUri = chrome.identity.getRedirectURL();
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=id_token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=email%20profile&nonce=random123`
+ if (request.action === "start_google_login") {
 
+  const clientId = "607973663178-77310te3pai19cup4ef6g61u5bn4us5s.apps.googleusercontent.com";
+  const redirectUri = chrome.identity.getRedirectURL();
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=id_token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=email%20profile&nonce=random123`;
 
-    chrome.identity.launchWebAuthFlow({
-      url: authUrl,
-      interactive: true
-    }, function (responseUrl) {
-      if (chrome.runtime.lastError || !responseUrl) {
-        console.error("Fail to login or Cancel: ", chrome.runtime.lastError?.message)
-        return
-      }
+  chrome.identity.launchWebAuthFlow({
+    url: authUrl,
+    interactive: true
+  }, function (responseUrl) {
+    if (chrome.runtime.lastError || !responseUrl) {
+      console.error("登入失敗: ", chrome.runtime.lastError?.message);
+      return;
+    }
 
+    const params = new URLSearchParams(new URL(responseUrl.replace('#', '?')).search);
+    const idToken = params.get('id_token');
 
-      const params = new URLSearchParams(new URL(responseUrl.replace('#', '?')).search)
-      const idToken = params.get('id_token')
-
-      if (idToken) {
-
-        chrome.storage.local.set({ pendingGoogleToken: idToken }, () => {
-          console.log("Token saved, waiting for popup")
-
-        })
-      }
-    })
-
-    return true
-  }
+    if (idToken) {
+      chrome.storage.local.set({ pendingGoogleToken: idToken }, () => {
+        console.log("Token 儲存成功，交給 Popup");
+      });
+    }
+  });
+  return true;
+}
 
   if (request.action === "save_word_to_firebase") {
     chrome.storage.local.get(['uid','defaultBook'], async (result) => {

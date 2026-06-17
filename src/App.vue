@@ -353,7 +353,7 @@ onMounted(() => {
         if (result.pendingGoogleToken) {
           try {
             console.log('found Google Token, start to login Firebase')
-            const credential = GoogleAuthProvider.credential(result.pendingGoogleToken)
+            const credential = GoogleAuthProvider.credential(result.pendingGoogleToken);
             const userCredential = await signInWithCredential(auth, credential)
 
             chrome.storage.local.set({ uid: userCredential.user.uid })
