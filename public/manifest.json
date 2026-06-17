@@ -1,7 +1,7 @@
-
 {
   "manifest_version": 3,
   "name": "WordCollector",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9KgGmG9bXIgmcEC4wbCN+gGv5dfYzzOlucREHDuCProb80aDMccm/mWciOoHWLE9wlVn88XM1qaEpI0PA9H9sg+q4u8syqAIJjF0l9zuVqvfvCuZR0D60He8R03rfXZyBuewvPQGi7vyhEra/VVci978SeD/OlyM4WZWaOu4xPzWbYsecaLyPEPB6hETn622YZA3F0C9MmCvqWZLoMo54aaEOKHIbJrgSsAofNk9jH0yXGOi2cARSlxoipQinoYMTSBfndaweFRTfYC2fpXOQJv7vCVuJw+OD03JLmjmCPEileSIn1Mmddpsnt6CsKQCaqf0bp3O62gMlT7lTLAWKQIDAQAB",
   "version": "1.0.0",
   "icons": {
     "16": "greenBook3.png",
@@ -20,7 +20,6 @@
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
-
     ]
   },
   "background": {
@@ -37,8 +36,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content.js"
+      ]
     }
   ],
   "externally_connectable": {

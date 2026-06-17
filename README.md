@@ -103,28 +103,63 @@ Before getting started with word_collector, please install Chrome or Brave brows
 
 ### Installation
 
-Install word_collector using following method.
+Since this project is entirely open-source and free, it is currently not published on the Chrome Web, but you can easily install it manually in just a few steps!
 
-1. 
-2. Open Chrome or Brave browser.
-3. Click the Kebab menu in the top-right corner.
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
-   ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
-   ```
+#### Step 1: Download the Extension
+1. Go to the https://github.com/cjt-0627/WordCollector/releases/tag/v1.0.0 page of this repository.
+2. Download the latest `.zip` file
+3. Extract (unzip) the downloaded file into a folder on your computer.
+
+#### Step 2: Load into Chrome
+1. Open Google Chrome and type `chrome://extensions` in the address bar, then press Enter.
+2. Toggule on **Developer mode** in the top-right corner.
+3. Click the **Load unpacked** button in the top-left corner.
+4. Select the folder you just extracted.
+5. **Done!** Click the puzzle icon in the top-right corner of your browser and pin **WordCollector** to your toolbar for easy access.
+
+---
+###  For Developers (Build from source)
+If you prefer to build the project yourself:
+1. Clone the repository: `git clone https://github.com/cjt-0627/wordcollector`
+2. Navigate to the folder: `cd wordcollector`
+3. Install dependecies: `npm install` (or `yarn`)
+4. Build the app: `npm run build` (or `yarn build`)
+5. Follow **Step 2** above, but select the newly generated `dist` folder to load the extension. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 
-## Usage
+##  Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+WordCollector is designed to seamlessly integrate into your daily web browsing. Here is how you can start building your vocabulary:
+
+### 1. Collect Words on the Go
+When reading an article or browsing a website, simply highlight an unfamiliar English word, click the extension icon (or use the right-click menu), and add it to your collection.
+
+> 🖼️ *(Insert a screenshot or GIF here showing the user highlighting a word and adding it)*
+> `![Collecting Words](link-to-your-image-or-gif)`
+
+### 2. Choose Your Translation Mode (切換翻譯模式)
+WordCollector supports three different translation engines to suit your learning style. Go to the settings panel to switch between:
+* **Google Translation**: Fast and straightforward.
+* **Cambridge Translation**: Detailed dictionary definitions and examples.
+* **AI Translation**: Get context-aware translations. (Requires your own API key).
+
+> 🖼️ *(Insert a screenshot of the settings/translation mode selection panel)*
+> `![Translation Modes](link-to-your-image-or-gif)`
+
+### 3. Build & Review Your Vocabulary Volumes (建立與複習單字本)
+You can organize your saved words into custom volumes. Open the extension's dashboard to review your collections whenever you want.
+
+> 🖼️ *(Insert a screenshot of the review dashboard or vocabulary list)*
+> `![Review Dashboard](link-to-your-image-or-gif)`
+
+### ⚙️ Setting up AI Translation (設定 AI 翻譯 API)
+To use the AI translation feature, you need to provide your own API key:
+1. Obtain an API key from your preferred AI provider.
+2. Open WordCollector and navigate to **Settings**.
+3. Paste your API key into the designated field and save. Your key is stored locally and securely on your browser.
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
