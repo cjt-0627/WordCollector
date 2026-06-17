@@ -1,35 +1,51 @@
+
 {
-    "name": "word-collector",
-    "version": "1.0",
-    "manifest_version": 3,
-    "action": {
-        "default_popup": "index.html"
-    },
-    "permissions": [
-        "activeTab",
-        "contextMenus",
-        "storage"
-    ],
-    "externally_connectable": {
-        "matches": [
-            "https://word-collector-62657.web.app/*",
-            "https://word-collector-62657.firebaseapp.com/*"
-        ]
-    },
-    "background": {
-        "service_worker": "background/background.js",
-        "type": "module"
-    },
-    "content_scripts": [
-        {
-            "matches": ["<all_urls>"],
-            "js": ["main.js"]
-        }
-    ],
-    "web_accessible_resources": [
-        {
-            "resources": ["content.css"],
-            "matches": ["<all_urls>"]
-        }
+  "manifest_version": 3,
+  "name": "WordCollector",
+  "version": "1.0.0",
+  "icons": {
+    "16": "greenBook3.png",
+    "32": "greenBook3.png",
+    "48": "greenBook3.png",
+    "128": "greenBook3.png"
+  },
+  "permissions": [
+    "storage",
+    "identity",
+    "tabs",
+    "contextMenus"
+  ],
+  "oauth2": {
+    "client_id": "607973663178-r4sl2nmgsb88rsdo583b2v4ehdjb9k62.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+
     ]
+  },
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "greenBook3.png",
+      "32": "greenBook3.png",
+      "48": "greenBook3.png",
+      "128": "greenBook3.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"]
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://word-collector-62657.web.app/*",
+      "https://word-collector-62657.firebaseapp.com/*",
+      "http://localhost:5173/*"
+    ]
+  }
 }

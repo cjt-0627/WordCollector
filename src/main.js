@@ -20,9 +20,9 @@ if (isPopupContext) {
     link.href = chrome.runtime.getURL('content.css')
     shadow.appendChild(link)
 
-    const bsLink=document.createElement('link')
-    bsLink.rel='stylesheet'
-    bsLink.href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css'
+    const bsLink = document.createElement('link')
+    bsLink.rel = 'stylesheet'
+    bsLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css'
     shadow.appendChild(bsLink)
 
     const mountPoint = document.createElement('div')

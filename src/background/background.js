@@ -1,45 +1,124 @@
-import sayHello from "./hello"
-import { auth } from "../firebase"
-import { signInWithCredential, GoogleAuthProvider } from "firebase/auth"
+import { db } from '../firebase'
+import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, deleteDoc, setDoc, getDoc } from "firebase/firestore"
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "greet") {
-        sendResponse({ status: "success", message: `${sayHello(request.message.name)}` });
-    }
+
+  if (request.action === "start_google_login") {
+    const clientId = "607973663178-r4sl2nmgsb88rsdo583b2v4ehdjb9k62.apps.googleusercontent.com"
+    const redirectUri = chrome.identity.getRedirectURL();
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=id_token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=email%20profile&nonce=random123`
+
+
+    chrome.identity.launchWebAuthFlow({
+      url: authUrl,
+      interactive: true
+    }, function (responseUrl) {
+      if (chrome.runtime.lastError || !responseUrl) {
+        console.error("Fail to login or Cancel: ", chrome.runtime.lastError?.message)
+        return
+      }
+
+
+      const params = new URLSearchParams(new URL(responseUrl.replace('#', '?')).search)
+      const idToken = params.get('id_token')
+
+      if (idToken) {
+
+        chrome.storage.local.set({ pendingGoogleToken: idToken }, () => {
+          console.log("Token saved, waiting for popup")
+
+        })
+      }
+    })
+
+    return true
+  }
+
+  if (request.action === "save_word_to_firebase") {
+    chrome.storage.local.get(['uid','defaultBook'], async (result) => {
+      const uid = result.uid
+
+      const currentBook=result.defaultBook || "collected words"
+
+      if (!uid) {
+        sendResponse({ success: false, error: "Not logged in" })
+        return
+      }
+
+      try {
+        const userWordRef = collection(db, "users", uid, "words")
+
+        const q = query(userWordRef, where("word", "==", request.word))
+        const querySnapshot = await getDocs(q)
+
+        if (!querySnapshot.empty) {
+          sendResponse({ success: false, reason: "duplicate" })
+          return true
+        }
+        await addDoc(userWordRef, {
+          word: request.word,
+          translation: request.translation,
+          createdAt: serverTimestamp(),
+          book: currentBook
+        })
+        console.log("Saved word success")
+        sendResponse({ success: true })
+      } catch (error) {
+        console.error("Fail to save in Firebase: ", error)
+        sendResponse({ success: false, error: error.message })
+      }
+    })
+    return true
+  }
+
 })
 
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({
-        id: "collect-word",
-        title: "add to vocabulary",
-        contexts: ["selection"]
-    })
+  chrome.contextMenus.create({
+    id: "collect-word",
+    title: "add to vocabulary",
+    contexts: ["selection"]
+  })
 })
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "collect-word") {
-        const selectedWord = info.selectionText;
-        console.log("collected word: ", selectedWord);
+  if (info.menuItemId === "collect-word") {
+    const selectedWord = info.selectionText;
+    console.log("collected word: ", selectedWord);
 
+
+    chrome.storage.local.get(['translationMethod'], (result) => {
+      const method = result.translationMethod || "google"
+      if (method === "cambridge") {
+        const cambridgeUrl = `https://dictionary.cambridge.org/dictionary/english-chinese-traditional/${encodeURIComponent(selectedWord)}`
+        chrome.tabs.create({ url: cambridgeUrl })
+      } else {
         chrome.tabs.sendMessage(tab.id, {
-            action: "show-translation-modal",
-            word: selectedWord
+          action: "show-translation-modal",
+          word: selectedWord
         })
-    }
+      }
+    })
+
+
+  }
 })
 
-chrome.runtime.onMessageExternel.addListener((request, sender, sendResponse) => {
-    if (request.action === "login_success" && request.idToken) {
-        const credential = GoogleAuthProvider.credential(null, request.idToken)
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  console.log("Received message from extranet : ", message);
+  if (message.action === "login_success") {
+    const idToken = message.idToken
 
-        signInWithCredential(auth, credential).then((userCredential) => {
-            console.log("chrome-extension background sign in success: ", userCredential.user)
-            chrome.storage.local.set({ uid: userCredential.user.uid })
-            sendResponse({ status: "success" })
-        }).catch((errror) => {
-            console.error("chrome-extension background sign in fail: ", error)
-            sendResponse({ status: "error", message: error.message })
-        })
-        return ture
+    if (idToken) {
+      chrome.storage.local.set({ idToken: idToken }, () => {
+        console.log("Token sync success")
+        sendResponse({ status: "success", message: "Extension sync success " })
+
+      })
+    } else {
+      sendResponse({ status: "fail", message: "Token is empty" })
     }
+  }
+  return true
+
 })
