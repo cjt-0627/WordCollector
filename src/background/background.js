@@ -72,7 +72,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "collect-word",
-    title: "add to vocabulary",
+    title: "search for the word",
     contexts: ["selection"]
   })
 })
