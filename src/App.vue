@@ -52,7 +52,6 @@ function handleDragEnd() {
 async function handleDeleteDrop(e) {
   isDragging.value = false
 
-
   const indexStr = e.dataTransfer.getData('text/plain')
   const targetIndex = indexStr !== '' ? parseInt(indexStr, 10) : draggedBookIndex.value
 
@@ -96,7 +95,7 @@ async function handleDeleteDrop(e) {
   }, 50)
 }
 
-function handleDragStart(e,index) {
+function handleDragStart(e, index) {
   draggedBookIndex.value = index
   isDragging.value = true
 
@@ -126,7 +125,6 @@ async function handleDrop(index) {
       console.error("Fail to sync books order to Firebase: ", error)
     }
   }
-
 }
 
 function cancelLongPress() {
@@ -227,14 +225,11 @@ async function saveRename() {
   if (index !== -1) books.value[index] = newName
 
   if (defaultBook.value === oldName) setDefaultBook(newName)
-  //
 }
 
 async function deleteBook(bookName) {
-
   if (bookName === 'collected words') return
 
-  // double check
   books.value = books.value.filter(b => b !== bookName)
 
   if (typeof chrome !== 'undefined' && chrome.storage) {
@@ -257,9 +252,7 @@ async function deleteBook(bookName) {
   }
 }
 
-
 function clearNote() {
-
   if (!quickNote.value.trim()) return
 
   if (confirm("Are you sure to clear your note place?")) {
@@ -276,13 +269,13 @@ function handleWheel(e, item) {
     if (e.deltaX > 15) {
       savedWords.value.forEach(w => { if (w !== item) w.isSwiped = false })
       item.isSwiped = true
-
     } else if (e.deltaX < -15) {
       item.isSwiped = false
     }
   }
 }
 
+// 
 function handleSwipeEnd(e, item) {
   const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX
   const diffX = startX - endX
@@ -297,7 +290,6 @@ function handleSwipeEnd(e, item) {
 
 async function deleteWord(item, index) {
   if (!currentUser.value) return
-  //
   try {
     const uid = currentUser.value.uid
 
@@ -332,7 +324,6 @@ async function fetchAndShowWords(bookName = "collected words") {
       if (wordBook === bookName) {
         words.push({ id: doc.id, ...doc.data(), isSwiped: false })
       }
-
     })
     savedWords.value = words
   } catch (error) {
@@ -340,7 +331,6 @@ async function fetchAndShowWords(bookName = "collected words") {
     alert("Fail to fetch words" + error.message)
   } finally {
     isLoadingWords.value = false
-
   }
 }
 
@@ -373,11 +363,9 @@ onMounted(() => {
             console.error("Fail to login Firebase: ", error)
             alert("Fail to verify Firebase: " + error.message)
           } finally {
-
             chrome.storage.local.remove('pendingGoogleToken')
           }
         }
-
 
         onAuthStateChanged(auth, async (user) => {
           if (user) {
@@ -411,11 +399,9 @@ onMounted(() => {
   }
 })
 
-
 async function loginWithGoogle() {
   if (typeof chrome !== 'undefined' && chrome.runtime) {
     chrome.runtime.sendMessage({ action: "start_google_login" })
-
   }
 }
 
@@ -425,11 +411,9 @@ async function handleSignOut() {
   } catch (error) {
     console.error("Sign out failed: ", error)
   }
-
 }
 
 watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
-
   if (!isLoaded.value) return
 
   chrome.storage.local.set({
@@ -444,9 +428,6 @@ watch(quickNote, (newNote) => {
   if (!isLoaded.value) return
   chrome.storage.local.set({ quickNote: newNote })
 })
-
-
-
 </script>
 
 <template>
@@ -483,8 +464,8 @@ watch(quickNote, (newNote) => {
         <ul class="list-group mb-5">
           <li v-for="(book, index) in books" :key="book"
             class="list-group-item p-0 overflow-hidden position-relative bg-danger" draggable="true"
-            @dragstart="handleDragStart($event, index)" @dragover.prevent @dragenter.prevent @drop="handleDrop(index)"
-            @dragend="handleDragEnd">
+            @dragstart="handleDragStart($event, index)" @dragover.prevent @dragenter.prevent
+            @drop.prevent="handleDrop(index)" @dragend="handleDragEnd">
 
             <div class="book-swipe-container bg-white" :class="{ 'is-swiped': swipedBook === book }"
               @touchstart="handleBookSwipeStart" @touchend="handleBookSwipeEnd($event, book)"
@@ -508,10 +489,10 @@ watch(quickNote, (newNote) => {
           </li>
         </ul>
 
-        <div v-show="isDragging"
+        <div v-if="isDragging"
           class="position-fixed bottom-0 start-50 translate-middle-x mb-4 px-4 py-2 rounded-pill d-flex justify-content-center align-items-center shadow-lg"
           style="background-color: rgba(220, 53, 69, 0.95); z-index: 2147483647; animation: slideUp 0.2s ease-out; cursor: pointer; min-width: 180px;"
-          @dragover.prevent @dragenter.prevent @drop="handleDeleteDrop($event)">
+          @dragover.prevent @dragenter.prevent @drop.prevent="handleDeleteDrop($event)">
 
           <div class="text-white fw-bold d-flex align-items-center fs-6 pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
@@ -555,7 +536,7 @@ watch(quickNote, (newNote) => {
         <div v-if="isLoadingWords" class="text-center text-muted mt-3">Loading...</div>
         <div v-else-if="savedWords.length === 0" class="text-center text-muted mt-3">There is no any words</div>
 
-        <ul v-else class="list-group">
+        <ul class="list-group">
           <li v-for="(item, index) in savedWords" :key="item.id"
             class="list-group-item p-0 overflow-hidden position-relative">
 
@@ -648,7 +629,6 @@ watch(quickNote, (newNote) => {
 </template>
 
 <style scoped>
-/* 側欄基礎樣式 */
 .sidebar {
   position: absolute;
   top: 0;
@@ -664,7 +644,6 @@ watch(quickNote, (newNote) => {
   right: 0;
 }
 
-/* --- 單字專用：包含垃圾桶的滑動外殼 --- */
 .swipe-container {
   display: flex;
   width: calc(100% + 70px);
@@ -693,7 +672,6 @@ watch(quickNote, (newNote) => {
   flex-shrink: 0;
 }
 
-/* --- ✨ 單字本專用：左滑動畫與樣式 ✨ --- */
 .book-swipe-container {
   display: flex;
   width: 100%;
@@ -706,11 +684,9 @@ watch(quickNote, (newNote) => {
 }
 
 .book-swipe-container.is-swiped {
-  /* 往左滑動 35px，露出底下我們鋪的紅色底色，提示使用者即將刪除 */
   transform: translateX(-35px);
 }
 
-/* 底部彈出面板的進場動畫 */
 @keyframes slideUp {
   from {
     transform: translateY(100%);

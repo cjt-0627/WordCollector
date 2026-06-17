@@ -2,6 +2,12 @@
   "manifest_version": 3,
   "name": "WordCollector",
   "version": "1.0.0",
+  "icons": {
+    "16": "greenBook3.png",
+    "32": "greenBook3.png",
+    "48": "greenBook3.png",
+    "128": "greenBook3.png"
+  },
   "permissions": [
     "storage",
     "identity",
@@ -19,7 +25,13 @@
     "service_worker": "src/background/background.js"
   },
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "greenBook3.png",
+      "32": "greenBook3.png",
+      "48": "greenBook3.png",
+      "128": "greenBook3.png"
+    }
   },
   "content_scripts": [
     {
@@ -35,4 +47,3 @@
     ]
   }
 }
-
