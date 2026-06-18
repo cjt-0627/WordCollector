@@ -146,13 +146,14 @@ When reading an article or browsing a website, simply highlight an unfamiliar En
 ### 2. Choose Your Translation Mode (切換翻譯模式)
 
 WordCollector supports three different translation engines to suit your learning style. Go to the settings panel to switch between:
+* **(🔥Recommendation) Cambridge Translation**: Detailed dictionary definitions ad examples. If you change to this mode and click the button, you will be
 
-* **(🔥Recommendation) Cambridge Translation**: Detailed dictionary definitions and examples.
+
 * **Google Translation**: Fast and straightforward.
+
 * **AI Translation**: Get context-aware translations. (Requires your own API key).
 
-> 🖼️ *(Insert a screenshot of the settings/translation mode selection panel)*
-> `![Translation Modes](link-to-your-image-or-gif)`
+
 
 ### 3. Build & Review Your Vocabulary Volumes (建立與複習單字本)
 

@@ -79,23 +79,65 @@ async function translateWithGoogle(word) {
   }
 }
 
-async function translateWithAI(word, settings){
-  try{
-    const{apiUrl,apiKey,selectedModel}=setttings
-    //to-do 
-    translationText.value=`AI translation result`
-  }catch(error){
-    console.error(error)
-    translationText.value="AI translation failed"
+async function translateWithAI(word, settings) {
+  try {
+
+    const { apiUrl, apiKey, selectedModel } = settings;
+
+
+    if (!apiUrl || !apiKey || !selectedModel) {
+       translationText.value = "Please complete APIURL, APIKEY, and model name!";
+       return;
+    }
+
+
+    const requestBody = {
+      model: selectedModel,
+      messages: [
+        {
+          role: "system",
+          content: "你是一個專業的英漢字典助手。請將使用者輸入的英文單字翻譯成繁體中文。請提供簡潔的翻譯，並視情況提供一兩個例句。請不要輸出多餘的廢話。"
+        },
+        {
+          role: "user",
+          content: word
+        }
+      ],
+      temperature: 0.3
+    };
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      throw new Error(`API failed to request, state_key：${response.status}`);
+    }
+
+    const data = await response.json();
+
+
+    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+      translationText.value = data.choices[0].message.content.trim();
+    } else {
+      translationText.value = "Failed to analyze AI replies, please check API form.";
+    }
+
+  } catch (error) {
+    console.error("AI translation error:", error);
+    translationText.value = "AI failed to translate:" + error.message;
   }
 }
 </script>
 
 <template>
   <div v-if="isModalVisible" style="position: fixed; top: 20px; right: 20px; z-index: 2147483647;">
-    <div
-      style="width: 22rem; background-color: #fffbcc; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
-
+    <div style="width: 22rem; background-color: rgb(254, 250, 224); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
       <div v-if="isSuccess"
         style="padding: 30px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">

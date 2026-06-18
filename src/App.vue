@@ -601,12 +601,17 @@ watch(quickNote, (newNote) => {
 
       <div class="mb-2">
         <label for="apiKey" class="form-label text-muted mb-1" style="font-size:0.85rem">API Key</label>
-        <input type="password" class="form-control form-controll-sm" id="apiKey" v-model="apiKey" placeholder="sk-...">
+        <input type="password" class="form-control form-control-sm" id="apiKey" v-model="apiKey" placeholder="sk-...">
       </div>
 
       <div class="mb-2">
+        <label for="apiUrl" class="form-label text-muted mb-1" style="font-size:0.85rem">API URL</label>
+        <input type="text" class="form-control form-control-sm" id="apiUrl" v-model="apiUrl"
+          placeholder="https://api.openai.com/v1/chat/completions">
+      </div>
+      <div class="mb-2">
         <label for="selectedModel" class="form-label text-muted mb-1" style="font-size:0.85rem">Model Selection</label>
-        <input type="text" class="form-control form-controll-sm" id="selectedModel" v-model="selectedModel"
+        <input type="text" class="form-control form-control-sm" id="selectedModel" v-model="selectedModel"
           placeholder="gpt-4o-mini">
       </div>
       <hr class="my-3 text-muted">
