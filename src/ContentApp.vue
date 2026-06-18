@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from "vue"
-
+import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { z } from "zod";
 const isModalVisible = ref(false)
 const currentWord = ref("")
 const translationText = ref("")
@@ -83,50 +85,74 @@ async function translateWithAI(word, settings) {
   try {
 
     const { apiUrl, apiKey, selectedModel } = settings;
-
+    console.log(apiKey.value)
 
     if (!apiUrl || !apiKey || !selectedModel) {
-       translationText.value = "Please complete APIURL, APIKEY, and model name!";
-       return;
+      translationText.value = "Please complete APIURL, APIKEY, and model name!";
+      return;
     }
 
 
-    const requestBody = {
-      model: selectedModel,
-      messages: [
-        {
-          role: "system",
-          content: "你是一個專業的英漢字典助手。請將使用者輸入的英文單字翻譯成繁體中文。請提供簡潔的翻譯，並視情況提供一兩個例句。請不要輸出多餘的廢話。"
-        },
-        {
-          role: "user",
-          content: word
-        }
-      ],
-      temperature: 0.3
-    };
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(requestBody)
+    const openai = new OpenAI({
+      apiKey: apiKey.value,
+      baseURL: apiUrl.value,
+      dangerouslyAllowBrowser: true
     });
 
-    if (!response.ok) {
-      throw new Error(`API failed to request, state_key：${response.status}`);
-    }
+    const TranslationResult = z.object({
+      chinese: z.string(),
+      parts_of_speech: z.string(),
+      example_sentences: z.string(),
+    });
 
-    const data = await response.json();
+    const completion = await openai.chat.completions.parse({
+      model: "gemini-3.5-flash",
+      messages: [
+        { role: "system", content: "你是一個專業的英漢字典助手。請將使用者輸入的英文單字翻譯成繁體中文，並附上詞性。請提供簡潔的翻譯，並視情況提供一個例句。" },
+        { role: "user", content: word },
+      ],
+      response_format: zodResponseFormat(TranslationResult, "translationResult"),
+    });
+
+    const event = completion.choices[0].message.parsed;
+    console.log(event);
+
+    //   const requestBody = {
+    //     model: selectedModel,
+    //     messages: [
+    //       {
+    //         role: "system",
+    //         content: "你是一個專業的英漢字典助手。請將使用者輸入的英文單字翻譯成繁體中文，並附上詞性。請提供簡潔的翻譯，並視情況提供一兩個例句。請不要輸出多餘的廢話。"
+    //       },
+    //       {
+    //         role: "user",
+    //         content: word
+    //       }
+    //     ],
+    //     temperature: 0.3
+    //   };
+
+    //   const response = await fetch(apiUrl, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "Authorization": `Bearer ${apiKey}`
+    //     },
+    //     body: JSON.stringify(requestBody)
+    //   });
+
+    //   if (!response.ok) {
+    //     throw new Error(`API failed to request, state_key：${response.status}`);
+    //   }
+
+    //   const data = await response.json();
 
 
-    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-      translationText.value = data.choices[0].message.content.trim();
-    } else {
-      translationText.value = "Failed to analyze AI replies, please check API form.";
-    }
+    //   if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+    //     translationText.value = data.choices[0].message.content.trim();
+    //   } else {
+    //     translationText.value = "Failed to analyze AI replies, please check API form.";
+    //   }
 
   } catch (error) {
     console.error("AI translation error:", error);
@@ -137,7 +163,8 @@ async function translateWithAI(word, settings) {
 
 <template>
   <div v-if="isModalVisible" style="position: fixed; top: 20px; right: 20px; z-index: 2147483647;">
-    <div style="width: 22rem; background-color: rgb(254, 250, 224); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
+    <div
+      style="width: 22rem; background-color: rgb(254, 250, 224); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
       <div v-if="isSuccess"
         style="padding: 30px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">

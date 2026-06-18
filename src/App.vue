@@ -3,6 +3,7 @@ import { ref, onMounted, watch, nextTick } from "vue"
 import { db, auth, googleProvider } from './firebase'
 import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, deleteDoc, setDoc, getDoc, writeBatch } from "firebase/firestore"
 import { signInWithCredential, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth"
+import OpenAI from "openai"
 
 const props = defineProps({
   isPopup: {
@@ -19,6 +20,10 @@ const apiUrl = ref("")
 const selectedModel = ref("")
 const translationMethod = ref("ai")
 const isLoaded = ref(false)
+
+
+const availableModels = ref([])
+const isFetchingModels = ref(false)
 
 const isSidebarOpen = ref(false)
 const savedWords = ref([])
@@ -44,9 +49,32 @@ const draggedBookIndex = ref(null)
 
 const isDragging = ref(false)
 
-function handleDragEnd() {
-  isDragging.value = false
-  draggedBookIndex.value = null
+async function fetchModels() {
+
+  try {
+    if (!apiUrl.value || !apiKey.value) {
+      alert("Please fill in API URL and API Key first!")
+      return
+    }
+    isFetchingModels.value = true
+
+    const openai = new OpenAI({
+      apiKey: apiKey.value,
+      baseURL: apiUrl.value, dangerouslyAllowBrowser: true
+    });
+    const list = await openai.models.list()
+
+    for await (const model of list) {
+      console.log(model.id)
+      availableModels.value.push(model.id.replace('models/', ''))
+    }
+  }
+  catch (error) {
+    console.error("Fetch models error:", error);
+    alert("Fetch failed: " + error.message + "\n(You can still manually input the model name)");
+  } finally {
+    isFetchingModels.value = false;
+  }
 }
 
 async function handleDeleteDrop(e) {
@@ -135,7 +163,7 @@ async function addNewBook() {
   const name = newBookName.value.trim()
   if (!name) return
   if (books.value.includes(name)) {
-    alert("Thid book already exists!")
+    alert("This book already exists!")
     return
   }
   books.value.push(name)
@@ -275,7 +303,6 @@ function handleWheel(e, item) {
   }
 }
 
-// 
 function handleSwipeEnd(e, item) {
   const endX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX
   const diffX = startX - endX
@@ -336,13 +363,14 @@ async function fetchAndShowWords(bookName = "collected words") {
 
 onMounted(() => {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-
+    // 獲取所有本地資料，包括可用模型
     chrome.storage.local.get(['translationMethod', 'apiKey', 'apiUrl', 'selectedModel', 'pendingGoogleToken', 'books', 'defaultBook', 'quickNote'], async (result) => {
 
       if (result.translationMethod) translationMethod.value = result.translationMethod
       if (result.apiKey) apiKey.value = result.apiKey
       if (result.apiUrl) apiUrl.value = result.apiUrl
       if (result.selectedModel) selectedModel.value = result.selectedModel
+
 
       if (result.books) books.value = Array.isArray(result.books) ? result.books : ["collected words"]
       if (result.defaultBook) defaultBook.value = result.defaultBook
@@ -413,6 +441,7 @@ async function handleSignOut() {
   }
 }
 
+// 監聽有設定異動時，儲存至 Storage
 watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
   if (!isLoaded.value) return
 
@@ -420,9 +449,11 @@ watch([translationMethod, apiKey, apiUrl, selectedModel], () => {
     translationMethod: translationMethod.value,
     apiKey: apiKey.value,
     apiUrl: apiUrl.value,
-    selectedModel: selectedModel.value
+    selectedModel: selectedModel.value,
+
   })
-})
+
+}, { deep: true })
 
 watch(quickNote, (newNote) => {
   if (!isLoaded.value) return
@@ -607,13 +638,28 @@ watch(quickNote, (newNote) => {
       <div class="mb-2">
         <label for="apiUrl" class="form-label text-muted mb-1" style="font-size:0.85rem">API URL</label>
         <input type="text" class="form-control form-control-sm" id="apiUrl" v-model="apiUrl"
-          placeholder="https://api.openai.com/v1/chat/completions">
+          placeholder="https://generativelanguage.googleapis.com/v1beta/openai/chat/completions">
       </div>
-      <div class="mb-2">
+
+      <div class="mb-3">
+        <button class="btn btn-secondary btn-sm w-100" @click="fetchModels" :disabled="isFetchingModels">
+          {{ isFetchingModels ? 'Fetching models...' : 'Confirm & Fetch Models' }}
+        </button>
+      </div>
+
+      <div class="mb-2" v-if="availableModels.length > 0">
         <label for="selectedModel" class="form-label text-muted mb-1" style="font-size:0.85rem">Model Selection</label>
-        <input type="text" class="form-control form-control-sm" id="selectedModel" v-model="selectedModel"
-          placeholder="gpt-4o-mini">
+        <select class="form-control form-control-sm" id="selectedModel" v-model="selectedModel">
+          <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
+        </select>
       </div>
+      <div class="mb-2" v-else>
+        <label for="selectedModel" class="form-label text-muted mb-1" style="font-size:0.85rem">Model Selection
+          (Manual)</label>
+        <input type="text" class="form-control form-control-sm" id="selectedModel" v-model="selectedModel"
+          placeholder="gpt-4o-mini 或點擊上方按鈕獲取">
+      </div>
+
       <hr class="my-3 text-muted">
 
       <h6 class="mb-2">Account</h6>
