@@ -50,26 +50,26 @@ const draggedBookIndex = ref(null)
 const isDragging = ref(false)
 
 async function fetchModels() {
+  if (!apiUrl.value || !apiKey.value) {
+    alert("Please fill in API URL and API Key first!");
+    return;
+  }
+
+  isFetchingModels.value = true;
 
   try {
-    if (!apiUrl.value || !apiKey.value) {
-      alert("Please fill in API URL and API Key first!")
-      return
-    }
-    isFetchingModels.value = true
-
-    const openai = new OpenAI({
-      apiKey: apiKey.value,
-      baseURL: apiUrl.value, dangerouslyAllowBrowser: true
+    const response = await chrome.runtime.sendMessage({
+      action: 'fetchModels',
+      apiUrl: apiUrl.value,
+      apiKey: apiKey.value
     });
-    const list = await openai.models.list()
 
-    for await (const model of list) {
-      console.log(model.id)
-      availableModels.value.push(model.id.replace('models/', ''))
+    if (response.success) {
+      availableModels.value = response.models;
+    } else {
+      alert("Fetch failed: " + response.error + "\n(You can still manually input the model name)");
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Fetch models error:", error);
     alert("Fetch failed: " + error.message + "\n(You can still manually input the model name)");
   } finally {

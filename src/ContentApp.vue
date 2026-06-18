@@ -83,80 +83,35 @@ async function translateWithGoogle(word) {
 
 async function translateWithAI(word, settings) {
   try {
-
     const { apiUrl, apiKey, selectedModel } = settings;
-    console.log(apiKey.value)
+    const urlVal = apiUrl?.value || apiUrl;
+    const keyVal = apiKey?.value || apiKey;
+    const modelVal = selectedModel?.value || selectedModel;
 
-    if (!apiUrl || !apiKey || !selectedModel) {
+    if (!urlVal || !keyVal || !modelVal) {
       translationText.value = "Please complete APIURL, APIKEY, and model name!";
       return;
     }
 
-
-    const openai = new OpenAI({
-      apiKey: apiKey.value,
-      baseURL: apiUrl.value,
-      dangerouslyAllowBrowser: true
+    const response = await chrome.runtime.sendMessage({
+      action: 'translateWithAI',
+      word: word,
+      settings: {
+        apiUrl: urlVal,
+        apiKey: keyVal,
+        selectedModel: modelVal
+      }
     });
 
-    const TranslationResult = z.object({
-      chinese: z.string(),
-      parts_of_speech: z.string(),
-      example_sentences: z.string(),
-    });
-
-    const completion = await openai.chat.completions.parse({
-      model: "gemini-3.5-flash",
-      messages: [
-        { role: "system", content: "你是一個專業的英漢字典助手。請將使用者輸入的英文單字翻譯成繁體中文，並附上詞性。請提供簡潔的翻譯，並視情況提供一個例句。" },
-        { role: "user", content: word },
-      ],
-      response_format: zodResponseFormat(TranslationResult, "translationResult"),
-    });
-
-    const event = completion.choices[0].message.parsed;
-    console.log(event);
-
-    //   const requestBody = {
-    //     model: selectedModel,
-    //     messages: [
-    //       {
-    //         role: "system",
-    //         content: "你是一個專業的英漢字典助手。請將使用者輸入的英文單字翻譯成繁體中文，並附上詞性。請提供簡潔的翻譯，並視情況提供一兩個例句。請不要輸出多餘的廢話。"
-    //       },
-    //       {
-    //         role: "user",
-    //         content: word
-    //       }
-    //     ],
-    //     temperature: 0.3
-    //   };
-
-    //   const response = await fetch(apiUrl, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "Authorization": `Bearer ${apiKey}`
-    //     },
-    //     body: JSON.stringify(requestBody)
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error(`API failed to request, state_key：${response.status}`);
-    //   }
-
-    //   const data = await response.json();
-
-
-    //   if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-    //     translationText.value = data.choices[0].message.content.trim();
-    //   } else {
-    //     translationText.value = "Failed to analyze AI replies, please check API form.";
-    //   }
+    if (response.success) {
+      translationText.value = `中文：${response.data.chinese}\n詞性：${response.data.parts_of_speech}\n例句：${response.data.example_sentences}\n`;
+    } else {
+      translationText.value = response.error;
+    }
 
   } catch (error) {
-    console.error("AI translation error:", error);
-    translationText.value = "AI failed to translate:" + error.message;
+    console.error("Message passing error:", error);
+    translationText.value = "Translation connection failed. " + error.message;
   }
 }
 </script>
@@ -164,7 +119,8 @@ async function translateWithAI(word, settings) {
 <template>
   <div v-if="isModalVisible" style="position: fixed; top: 20px; right: 20px; z-index: 2147483647;">
     <div
-      style="width: 22rem; background-color: rgb(254, 250, 224); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
+      style="width: 40rem; max-width: 90vw; background-color: rgb(254, 250, 224); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid #ccc; overflow: hidden; font-family: sans-serif; color: #333;">
+      
       <div v-if="isSuccess"
         style="padding: 30px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 140px;">
         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -175,18 +131,18 @@ async function translateWithAI(word, settings) {
           successfully!</p>
       </div>
 
-      <div v-else style="padding: 16px;">
-        <h5 style="font-size: 1.25rem; font-weight: bold; margin: 0 0 8px 0; color: #000;">{{ currentWord }}</h5>
+      <div v-else style="padding: 24px;">
+        <h5 style="font-size: 1.5rem; font-weight: bold; margin: 0 0 8px 0; color: #000;">{{ currentWord }}</h5>
         <hr style="border: none; border-top: 1px solid #ddd; margin: 12px 0;">
-        <p style="min-height: 3rem; color: #555; margin: 0 0 16px 0; font-size: 14px;">
-          {{ translationText }}
-        </p>
+        
+        <p style="min-height: 10rem; max-height: 60vh; overflow-y: auto; color: #555; margin: 0 0 16px 0; font-size: 16px; white-space: pre-wrap; line-height: 1.6;">{{ translationText }}</p>
+        
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
           <button
-            style="background: white; border: 1px solid #6c757d; color: #6c757d; padding: 6px 12px; border-radius: 4px; cursor: pointer;"
+            style="background: white; border: 1px solid #6c757d; color: #6c757d; padding: 8px 16px; border-radius: 4px; cursor: pointer;"
             @click="closeModal">Cancel</button>
           <button
-            style="background: #198754; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;"
+            style="background: #198754; border: none; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;"
             @click="saveWord">Save word</button>
         </div>
       </div>
