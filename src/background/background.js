@@ -46,7 +46,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       try {
         const userWordRef = collection(db, "users", uid, "words")
         
-        // 加入 book 的判斷，確保同一個單字可以存在不同單字本中
+
         const q = query(userWordRef, where("word", "==", request.word), where("book", "==", currentBook))
         const querySnapshot = await getDocs(q)
 
