@@ -79,7 +79,7 @@ Since this project is entirely open-source and free, it is currently not publish
 
 #### Step 1: Download the Extension
 
-1. Go to the [Releases page](https://github.com/cjt-0627/WordCollector/releases/tag/v1.0.0) of this repository.
+1. Go to the [Releases page](https://github.com/cjt-0627/WordCollector/releases/download/v1.0.0/wordcollector-v1.0.0.zip) of this repository.
 2. Download the latest `.zip` file
 3. Extract (unzip) the downloaded file into a folder on your computer.
 
@@ -113,7 +113,7 @@ WordCollector is designed to seamlessly integrate into your daily web browsing. 
 
 ### Sign in with your Google account before you use
 
-Go to **Settings** and sign with Google account. After signing, you have to click the blank space to close the popup. Then, click the extension again. If you log in successfully, your browser will pop up an alert to tell you.
+Go to **Settings** and sign with Google account. After clicking the sign in button(no reaction is normal), you have to click the blank space to close the popup. Then, click the extension again. If you log in successfully, your browser will pop up an alert to tell you.
 
 ### 1. Collect Words on the Go
 
