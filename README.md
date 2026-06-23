@@ -33,11 +33,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -58,8 +54,6 @@ The project is currently under active development, with new features being intro
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
 
 * [![Vue][Vue.js]][Vue-url]
 * [![Bootstrap][Bootstrap.com]][Bootstrap-url]
@@ -85,14 +79,14 @@ Since this project is entirely open-source and free, it is currently not publish
 
 #### Step 1: Download the Extension
 
-1. Go to the https://github.com/cjt-0627/WordCollector/releases/tag/v1.0.0 page of this repository.
+1. Go to the [Releases page](https://github.com/cjt-0627/WordCollector/releases/tag/v1.0.0) of this repository.
 2. Download the latest `.zip` file
 3. Extract (unzip) the downloaded file into a folder on your computer.
 
 #### Step 2: Load into Chrome
 
 1. Open Google Chrome and type `chrome://extensions` in the address bar, then press Enter.
-2. Toggule on **Developer mode** in the top-right corner.
+2. Toggle on **Developer mode** in the top-right corner.
 3. Click the **Load unpacked** button in the top-left corner.
 4. Select the folder you just extracted.
 5. **Done!** Click the puzzle icon in the top-right corner of your browser and pin **WordCollector** to your toolbar for easy access.
@@ -105,7 +99,7 @@ If you prefer to build the project yourself:
 
 1. Clone the repository: `git clone https://github.com/cjt-0627/wordcollector`
 2. Navigate to the folder: `cd wordcollector`
-3. Install dependecies: `npm install` (or `yarn`)
+3. Install dependencies: `npm install` (or `yarn`)
 4. Build the app: `npm run build` (or `yarn build`)
 5. Follow **Step 2** above, but select the newly generated `dist` folder to load the extension.
 
@@ -117,9 +111,9 @@ If you prefer to build the project yourself:
 
 WordCollector is designed to seamlessly integrate into your daily web browsing. Here is how you can start building your vocabulary:
 
-### Sign with Google account before you use
+### Sign in with your Google account before you use
 
-Go to **Settings** and sign with Google account. After signing, you have to click the blank space to close the popup. Then, click the extension again. If you login success, your browser will pop up an alert to tell you.
+Go to **Settings** and sign with Google account. After signing, you have to click the blank space to close the popup. Then, click the extension again. If you log in successfully, your browser will pop up an alert to tell you.
 
 ### 1. Collect Words on the Go
 
@@ -128,7 +122,7 @@ When reading an article or browsing a website, simply highlight an unfamiliar En
 ### 2. Choose Your Translation Mode
 
 WordCollector supports three different translation engines to suit your learning style. Go to the settings panel to switch between:
-* **(🔥Recommendation) Cambridge Translation**: Detailed dictionary definitions ad examples. If you change to this mode and click the button, you will be
+* **(🔥Recommendation) Cambridge Translation**: Detailed dictionary definitions ad examples. If you change to this mode and click the button, you will be redirected to the Cambridge Dictionary website.
 
 
 * **Google Translation**: Fast and straightforward.
@@ -146,7 +140,7 @@ You can organize your saved words into custom volumes. Open the extension's dash
 
 To use the AI translation feature, you need to provide your own API key:
 
-1. Obtain an API key from your preferred AI provider and API url which suits OpenAI form.
+1. Obtain an API key from your preferred AI provider and OpenAI-compatible API url.
 2. Open WordCollector and navigate to **Settings**.
 3. Paste your API key and API url into the designated field and click the confirm button, and then choose the model you want. Your key is stored locally and securely on your browser.
 
