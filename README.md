@@ -79,7 +79,7 @@ Since this project is entirely open-source and free, it is currently not publish
 
 #### Step 1: Download the Extension
 
-1. Go to the [Releases page](https://github.com/cjt-0627/WordCollector/releases/download/v1.0.0/wordcollector-v1.0.0.zip) of this repository.
+1. Go to the [Releases page](https://github.com/cjt-0627/WordCollector/releases/tag/v1.0.0) of this repository.
 2. Download the latest `.zip` file
 3. Extract (unzip) the downloaded file into a folder on your computer.
 
