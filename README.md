@@ -43,6 +43,9 @@
 
 WordCollector is an open-source Chrome extension designed to help English learners effortlessly collect and review vocabulary while browsing the web. Built with user-friendliness and intuitive navigation in mind, the app allows users to build custom vocabulary lists tailored to their learning pace.
 
+### Demo
+[demo video](https://youtu.be/um8HngKSkD8)
+
 ### Key Features:
 
 * **Flexible Vocabulary Management:** Build and organize your personal word bank seamlessly.
